@@ -1,0 +1,99 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string"
+    },
+    "vmName": {
+      "type": "string"
+    },
+    "imageSku": {
+      "type": "string"
+    },
+    "imageOffer": {
+      "type": "string"
+    },
+    "imagePublisher": {
+      "type": "string"
+    },
+    "nicName": {
+      "type": "string"
+    },
+    "vmSize": {
+      "type": "string"
+    },
+    "adminUsername": {
+      "type": "string"
+    },
+    "adminPassword": {
+      "type": "securestring"
+    },
+    "newStorageAccount": {
+      "type": "string"
+    },
+    "sshKey": {
+      "type": "string"
+    }
+  },
+  "variables": {
+        "apiVersion": "2015-06-15"
+  },
+  "resources": [
+  {
+        "apiVersion": "[variables('apiVersion')]",
+        "type": "Microsoft.Compute/virtualMachines",
+        "name": "[parameters('vmName')]",
+        "location": "[parameters('location')]",
+        "plan": {
+           "name": "[parameters('imageSku')]",
+           "product": "[parameters('imageOffer')]",
+           "publisher": "[parameters('imagePublisher')]"
+        },
+        "properties": {
+            "hardwareProfile": {
+                "vmSize": "[parameters('vmSize')]"
+            },
+            "osProfile": {
+                "computerName": "[parameters('vmName')]",
+                "adminUsername": "[parameters('adminUsername')]",
+                "adminPassword": "[parameters('adminPassword')]",
+                "customData": "[base64('configure\nset network interface ethernet ethernet1/1 layer3 dhcp-client enable yes\nset network interface ethernet ethernet1/2 layer3 dhcp-client enable yes\nset network virtual-router default interface ethernet1/1\nset network virtual-router default interface ethernet1/2\nset zone Client network layer3 ethernet1/1\nset zone Server network layer3 ethernet1/2\nset network virtual-router default routing-table ip static-route ToClient admin-dist 10 destination 192.168.1.0/24 interface ethernet1/1 nexthop ip-address 192.168.1.1\nset network virtual-router default routing-table ip static-route ToServer admin-dist 10 destination 192.168.2.0/24 interface ethernet1/2 nexthop ip-address 192.168.2.1\nset rulebase security rules ClientToServer from Client to Server source any destination any application any service any action allow\nset rulebase security rules ServerToClient from Server to Client source any destination any application any service any action allow\ncommit\nexit')]"
+            },
+            "storageProfile": {
+                "imageReference": {
+                    "publisher": "[parameters('imagePublisher')]",
+                    "offer": "[parameters('imageOffer')]",
+                    "sku": "[parameters('imageSku')]",
+                    "version": "latest"
+                },
+                "osDisk": {
+                    "name": "osdisk",
+                    "vhd": {
+                        "uri": "[concat('http://', parameters('newStorageAccount'), '.blob.core.windows.net/vhds/', parameters('vmName'), '-', parameters('imageOffer'), '-', parameters('imageSku'), '.vhd')]"
+                    },
+                    "caching": "ReadWrite",
+                    "createOption": "FromImage"
+                }
+            },
+            "networkProfile": {
+                "networkInterfaces": [{
+                    "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('nicName'),'0'))]",
+                    "properties": {
+                        "primary": true
+                    }
+                }, {
+                    "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('nicName'),'1'))]",
+                    "properties": {
+                        "primary": false
+                    }
+                }, {
+                    "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('nicName'),'2'))]",
+                    "properties": {
+                        "primary": false
+                    }
+                }]
+            }
+        }
+    }]
+}
