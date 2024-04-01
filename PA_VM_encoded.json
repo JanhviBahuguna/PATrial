@@ -1,0 +1,99 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string"
+    },
+    "vmName": {
+      "type": "string"
+    },
+    "imageSku": {
+      "type": "string"
+    },
+    "imageOffer": {
+      "type": "string"
+    },
+    "imagePublisher": {
+      "type": "string"
+    },
+    "nicName": {
+      "type": "string"
+    },
+    "vmSize": {
+      "type": "string"
+    },
+    "adminUsername": {
+      "type": "string"
+    },
+    "adminPassword": {
+      "type": "securestring"
+    },
+    "newStorageAccount": {
+      "type": "string"
+    },
+    "sshKey": {
+      "type": "string"
+    }
+  },
+  "variables": {
+        "apiVersion": "2015-06-15"
+  },
+  "resources": [
+  {
+        "apiVersion": "[variables('apiVersion')]",
+        "type": "Microsoft.Compute/virtualMachines",
+        "name": "[parameters('vmName')]",
+        "location": "[parameters('location')]",
+        "plan": {
+           "name": "[parameters('imageSku')]",
+           "product": "[parameters('imageOffer')]",
+           "publisher": "[parameters('imagePublisher')]"
+        },
+        "properties": {
+            "hardwareProfile": {
+                "vmSize": "[parameters('vmSize')]"
+            },
+            "osProfile": {
+                "computerName": "[parameters('vmName')]",
+                "adminUsername": "[parameters('adminUsername')]",
+                "adminPassword": "[parameters('adminPassword')]",
+                "customData": "Y29uZmlndXJlDQpzZXQgbmV0d29yayBpbnRlcmZhY2UgZXRoZXJuZXQgZXRoZXJuZXQxLzEgbGF5ZXIzIGRoY3AtY2xpZW50IGVuYWJsZSB5ZXMNCnNldCBuZXR3b3JrIGludGVyZmFjZSBldGhlcm5ldCBldGhlcm5ldDEvMiBsYXllcjMgZGhjcC1jbGllbnQgZW5hYmxlIHllcw0Kc2V0IG5ldHdvcmsgdmlydHVhbC1yb3V0ZXIgZGVmYXVsdCBpbnRlcmZhY2UgZXRoZXJuZXQxLzENCnNldCBuZXR3b3JrIHZpcnR1YWwtcm91dGVyIGRlZmF1bHQgaW50ZXJmYWNlIGV0aGVybmV0MS8yDQpzZXQgem9uZSBDbGllbnQgbmV0d29yayBsYXllcjMgZXRoZXJuZXQxLzENCnNldCB6b25lIFNlcnZlciBuZXR3b3JrIGxheWVyMyBldGhlcm5ldDEvMg0Kc2V0IG5ldHdvcmsgdmlydHVhbC1yb3V0ZXIgZGVmYXVsdCByb3V0aW5nLXRhYmxlIGlwIHN0YXRpYy1yb3V0ZSBUb0NsaWVudCBhZG1pbi1kaXN0IDEwIGRlc3RpbmF0aW9uIDEwLjU3LjEuMC8yNCBpbnRlcmZhY2UgZXRoZXJuZXQxLzEgbmV4dGhvcCBpcC1hZGRyZXNzIDEwLjU3LjEuMQ0Kc2V0IG5ldHdvcmsgdmlydHVhbC1yb3V0ZXIgZGVmYXVsdCByb3V0aW5nLXRhYmxlIGlwIHN0YXRpYy1yb3V0ZSBUb1NlcnZlciBhZG1pbi1kaXN0IDEwIGRlc3RpbmF0aW9uIDEwLjU3LjIuMC8yNCBpbnRlcmZhY2UgZXRoZXJuZXQxLzIgbmV4dGhvcCBpcC1hZGRyZXNzIDEwLjU3LjIuMQ0Kc2V0IHJ1bGViYXNlIHNlY3VyaXR5IHJ1bGVzIENsaWVudFRvU2VydmVyIGZyb20gQ2xpZW50IHRvIFNlcnZlciBzb3VyY2UgYW55IGRlc3RpbmF0aW9uIGFueSBhcHBsaWNhdGlvbiBhbnkgc2VydmljZSBhbnkgYWN0aW9uIGFsbG93DQpzZXQgcnVsZWJhc2Ugc2VjdXJpdHkgcnVsZXMgU2VydmVyVG9DbGllbnQgZnJvbSBTZXJ2ZXIgdG8gQ2xpZW50IHNvdXJjZSBhbnkgZGVzdGluYXRpb24gYW55IGFwcGxpY2F0aW9uIGFueSBzZXJ2aWNlIGFueSBhY3Rpb24gYWxsb3cNCmNvbW1pdA0KZXhpdA=="
+            },
+            "storageProfile": {
+                "imageReference": {
+                    "publisher": "[parameters('imagePublisher')]",
+                    "offer": "[parameters('imageOffer')]",
+                    "sku": "[parameters('imageSku')]",
+                    "version": "latest"
+                },
+                "osDisk": {
+                    "name": "osdisk",
+                    "vhd": {
+                        "uri": "[concat('http://', parameters('newStorageAccount'), '.blob.core.windows.net/vhds/', parameters('vmName'), '-', parameters('imageOffer'), '-', parameters('imageSku'), '.vhd')]"
+                    },
+                    "caching": "ReadWrite",
+                    "createOption": "FromImage"
+                }
+            },
+            "networkProfile": {
+                "networkInterfaces": [{
+                    "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('nicName'),'0'))]",
+                    "properties": {
+                        "primary": true
+                    }
+                }, {
+                    "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('nicName'),'1'))]",
+                    "properties": {
+                        "primary": false
+                    }
+                }, {
+                    "id": "[resourceId('Microsoft.Network/networkInterfaces',concat(parameters('nicName'),'2'))]",
+                    "properties": {
+                        "primary": false
+                    }
+                }]
+            }
+        }
+    }]
+}
