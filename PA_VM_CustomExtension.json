@@ -57,8 +57,7 @@
             "osProfile": {
                 "computerName": "[parameters('vmName')]",
                 "adminUsername": "[parameters('adminUsername')]",
-                "adminPassword": "[parameters('adminPassword')]",
-                "customData": "[base64('configure\nset network interface ethernet ethernet1/1 layer3 dhcp-client enable yes\nset network interface ethernet ethernet1/2 layer3 dhcp-client enable yes\nset network virtual-router default interface ethernet1/1\nset network virtual-router default interface ethernet1/2\nset zone Client network layer3 ethernet1/1\nset zone Server network layer3 ethernet1/2\nset network virtual-router default routing-table ip static-route ToClient admin-dist 10 destination 10.57.1.0/24 interface ethernet1/1 nexthop ip-address 10.57.1.1\nset network virtual-router default routing-table ip static-route ToServer admin-dist 10 destination 10.57.2.0/24 interface ethernet1/2 nexthop ip-address 10.57.2.1\nset rulebase security rules ClientToServer from Client to Server source any destination any application any service any action allow\nset rulebase security rules ServerToClient from Server to Client source any destination any application any service any action allow\ncommit\nexit')]"
+                "adminPassword": "[parameters('adminPassword')]"
             },
             "storageProfile": {
                 "imageReference": {
@@ -101,6 +100,9 @@
     "type": "Microsoft.Compute/virtualMachines/extensions",
     "name": "[concat(parameters('vmName'), '/CustomScriptExtension')]",
     "location": "[parameters('location')]",
+    "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', parameters('vmName'))]"
+    ],
     "properties": {
         "publisher": "Microsoft.Compute",
         "type": "CustomScriptExtension",
